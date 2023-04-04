@@ -12,7 +12,6 @@ keyword = 'advocacia'  # Substitua pela palavra-chave desejada
 # Localização que você deseja pesquisar (no exemplo, Brasília, DF)
 location = '-15.644213346051028, -47.829548118720055'  # Substitua pela localização desejada
 
-
 # URL da API do Google Places para pesquisa de empresas
 url = f'https://maps.googleapis.com/maps/api/place/textsearch/json?query={keyword}&location={location}&radius=5000&key={api_key}'
 
@@ -25,23 +24,22 @@ if response.status_code == 200:
     # Analisa o JSON retornado usando a biblioteca json
     data = response.json()
 
-    # Imprime o nome das empresas encontradas
+    # Percorre os resultados e obtém os detalhes de cada lugar
     for result in data['results']:
-        print(result['name'])
+        place_id = result['place_id']
+        details_url = f'https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields=name,formatted_address,website,international_phone_number&key={api_key}'
+        details_response = requests.get(details_url)
+        details_data = details_response.json()
 
-    # Verifica se há mais páginas de resultados
-    while 'next_page_token' in data:
-        # Aguarda 2 segundos antes de fazer uma nova solicitação para a próxima página de resultados
-        time.sleep(2)
-        # Faz uma nova solicitação GET para a próxima página de resultados
-        next_page_url = f'https://maps.googleapis.com/maps/api/place/textsearch/json?pagetoken={data["next_page_token"]}&key={api_key}'
-        next_page_response = requests.get(next_page_url)
-        next_page_data = next_page_response.json()
-        # Imprime o nome das empresas encontradas na próxima página
-        for result in next_page_data['results']:
-            print(result['name'])
-        # Atualiza o valor de data para o objeto JSON da próxima página de resultados
-        data = next_page_data
+        # Extrai as informações de contato e as imprime
+        print(result['name'])
+        details = details_data['result']
+        if 'formatted_address' in details:
+            print(f"Endereço: {details['formatted_address']}")
+        if 'website' in details:
+            print(f"Website: {details['website']}")
+        if 'international_phone_number' in details:
+            print(f"Telefone: {details['international_phone_number']}")
 
 else:
     # Imprime uma mensagem de erro caso a requisição não tenha sido bem sucedida
